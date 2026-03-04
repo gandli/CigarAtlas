@@ -43,7 +43,7 @@ export interface Humidor {
   target_humidity_max: number;
   image_url: string | null;
   capacity: number | null;
-  is_default: number;
+  is_default: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -100,7 +100,7 @@ export interface Reminder {
   interval_days: number;
   next_at: string;
   last_notified_at: string | null;
-  enabled: number;
+  enabled: boolean;
   notification_time: string;
   note: string | null;
   created_at: string;
