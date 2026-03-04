@@ -6,20 +6,69 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { compress } from 'hono/compress';
+import { secureHeaders } from 'hono/secure-headers';
 import type { Env, ApiResponse } from './types';
+import { getCorsOrigins } from './middleware';
+import { 
+  AppError, 
+  ValidationError,
+  handleD1Error,
+  validateWithZod 
+} from './errors';
+import {
+  AppleSignInSchema,
+  CreateHumidorSchema,
+  UpdateHumidorSchema,
+  CreateCigarSchema,
+  UpdateCigarSchema,
+  CreateEnvironmentLogSchema,
+  CreateReminderSchema,
+  UpdateReminderSchema,
+} from './validation';
 
 // Create Hono app
 const app = new Hono<{ Bindings: Env }>();
 
-// Middleware
+// Helper to return 501 Not Implemented responses
+function notImplemented(message: string): ApiResponse {
+  return {
+    success: false,
+    error: {
+      code: 'NOT_IMPLEMENTED',
+      message,
+    },
+  };
+}
+
+// ============================================================================
+// Global Middleware
+// ============================================================================
+
 app.use('*', logger());
+app.use('*', compress());
+app.use('*', secureHeaders());
+
+// Enhanced CORS with proper origin validation
 app.use('*', cors({
-  origin: '*', // Configure properly for production
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowHeaders: ['Content-Type', 'Authorization'],
+  origin: (origin) => {
+    const allowedOrigins = getCorsOrigins();
+    if (Array.isArray(allowedOrigins)) {
+      return allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+    }
+    return allowedOrigins === '*' ? origin : allowedOrigins;
+  },
+  allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposeHeaders: ['X-Request-Id'],
+  credentials: true,
+  maxAge: 86400, // 24 hours
 }));
 
-// Health check
+// ============================================================================
+// Health Check Endpoints
+// ============================================================================
+
 app.get('/', (c) => {
   return c.json<ApiResponse>({
     success: true,
@@ -32,15 +81,13 @@ app.get('/', (c) => {
   });
 });
 
-// Health check endpoint
 app.get('/health', (c) => {
   return c.json<ApiResponse>({
     success: true,
-    data: { status: 'healthy' },
+    data: { status: 'healthy', timestamp: new Date().toISOString() },
   });
 });
 
-// API version info
 app.get('/v1', (c) => {
   return c.json<ApiResponse>({
     success: true,
@@ -59,33 +106,29 @@ app.get('/v1', (c) => {
 });
 
 // ============================================================================
-// Auth routes (placeholder - to be implemented)
+// Auth Routes
 // ============================================================================
 
 app.post('/v1/auth/apple', async (c) => {
-  // TODO: Implement Apple Sign In
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Apple Sign In not yet implemented',
-    },
-  }, 501);
+  try {
+    const body = await c.req.json();
+    validateWithZod(AppleSignInSchema, body, 'Invalid Apple Sign In data');
+    
+    // TODO: Implement actual Apple Sign In verification
+    return c.json(notImplemented('Apple Sign In not yet implemented'), 501);
+  } catch (e) {
+    if (e instanceof AppError) {
+      return c.json<ApiResponse>(e.toResponse(), e.statusCode as any);
+    }
+    throw e;
+  }
 });
 
 app.post('/v1/auth/refresh', async (c) => {
-  // TODO: Implement token refresh
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Token refresh not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('Token refresh not yet implemented'), 501);
 });
 
 app.post('/v1/auth/logout', async (c) => {
-  // TODO: Implement logout
   return c.json<ApiResponse>({
     success: true,
     data: { message: 'Logged out successfully' },
@@ -93,262 +136,188 @@ app.post('/v1/auth/logout', async (c) => {
 });
 
 // ============================================================================
-// User routes (placeholder - to be implemented)
+// User Routes
 // ============================================================================
 
 app.get('/v1/users/me', async (c) => {
-  // TODO: Implement get current user
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Get user profile not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('Get user profile not yet implemented'), 501);
 });
 
 app.patch('/v1/users/me', async (c) => {
-  // TODO: Implement update user
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Update user profile not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('Update user profile not yet implemented'), 501);
 });
 
 // ============================================================================
-// Humidor routes (placeholder - to be implemented)
+// Humidor Routes
 // ============================================================================
 
 app.get('/v1/humidors', async (c) => {
-  // TODO: Implement list humidors
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'List humidors not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('List humidors not yet implemented'), 501);
 });
 
 app.post('/v1/humidors', async (c) => {
-  // TODO: Implement create humidor
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Create humidor not yet implemented',
-    },
-  }, 501);
+  try {
+    const body = await c.req.json();
+    validateWithZod(CreateHumidorSchema, body, 'Invalid humidor data');
+    
+    // TODO: Implement with database insert
+    return c.json(notImplemented('Create humidor not yet implemented'), 501);
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      return c.json<ApiResponse>(e.toResponse(), 400);
+    }
+    throw e;
+  }
 });
 
 app.get('/v1/humidors/:id', async (c) => {
-  // TODO: Implement get humidor
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Get humidor not yet implemented',
-    },
-  }, 501);
+  // Route parameter captured but endpoint not implemented yet
+  return c.json(notImplemented('Get humidor not yet implemented'), 501);
 });
 
 app.put('/v1/humidors/:id', async (c) => {
-  // TODO: Implement update humidor
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Update humidor not yet implemented',
-    },
-  }, 501);
+  // Route parameter captured but endpoint not implemented yet
+  try {
+    const body = await c.req.json();
+    validateWithZod(UpdateHumidorSchema, body, 'Invalid humidor data');
+    
+    return c.json(notImplemented('Update humidor not yet implemented'), 501);
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      return c.json<ApiResponse>(e.toResponse(), 400);
+    }
+    throw e;
+  }
 });
 
 app.delete('/v1/humidors/:id', async (c) => {
-  // TODO: Implement delete humidor
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Delete humidor not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('Delete humidor not yet implemented'), 501);
 });
 
 // ============================================================================
-// Cigar routes (placeholder - to be implemented)
+// Cigar Routes
 // ============================================================================
 
 app.get('/v1/humidors/:humidorId/cigars', async (c) => {
-  // TODO: Implement list cigars in humidor
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'List cigars not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('List cigars not yet implemented'), 501);
 });
 
 app.post('/v1/humidors/:humidorId/cigars', async (c) => {
-  // TODO: Implement create cigar
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Create cigar not yet implemented',
-    },
-  }, 501);
+  try {
+    const body = await c.req.json();
+    validateWithZod(CreateCigarSchema, body, 'Invalid cigar data');
+    
+    return c.json(notImplemented('Create cigar not yet implemented'), 501);
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      return c.json<ApiResponse>(e.toResponse(), 400);
+    }
+    throw e;
+  }
 });
 
 app.get('/v1/cigars/:id', async (c) => {
-  // TODO: Implement get cigar
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Get cigar not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('Get cigar not yet implemented'), 501);
 });
 
 app.put('/v1/cigars/:id', async (c) => {
-  // TODO: Implement update cigar
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Update cigar not yet implemented',
-    },
-  }, 501);
+  try {
+    const body = await c.req.json();
+    validateWithZod(UpdateCigarSchema, body, 'Invalid cigar data');
+    
+    return c.json(notImplemented('Update cigar not yet implemented'), 501);
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      return c.json<ApiResponse>(e.toResponse(), 400);
+    }
+    throw e;
+  }
 });
 
 app.delete('/v1/cigars/:id', async (c) => {
-  // TODO: Implement delete cigar
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Delete cigar not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('Delete cigar not yet implemented'), 501);
 });
 
 // ============================================================================
-// Environment Log routes (placeholder - to be implemented)
+// Environment Log Routes
 // ============================================================================
 
 app.get('/v1/humidors/:humidorId/logs', async (c) => {
-  // TODO: Implement list environment logs
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'List environment logs not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('List environment logs not yet implemented'), 501);
 });
 
 app.post('/v1/humidors/:humidorId/logs', async (c) => {
-  // TODO: Implement create environment log
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Create environment log not yet implemented',
-    },
-  }, 501);
+  try {
+    const body = await c.req.json();
+    validateWithZod(CreateEnvironmentLogSchema, body, 'Invalid log data');
+    
+    return c.json(notImplemented('Create environment log not yet implemented'), 501);
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      return c.json<ApiResponse>(e.toResponse(), 400);
+    }
+    throw e;
+  }
 });
 
 app.get('/v1/humidors/:humidorId/logs/stats', async (c) => {
-  // TODO: Implement get environment statistics
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Environment statistics not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('Environment statistics not yet implemented'), 501);
 });
 
 // ============================================================================
-// Reminder routes (placeholder - to be implemented)
+// Reminder Routes
 // ============================================================================
 
 app.get('/v1/humidors/:humidorId/reminders', async (c) => {
-  // TODO: Implement list reminders
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'List reminders not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('List reminders not yet implemented'), 501);
 });
 
 app.post('/v1/humidors/:humidorId/reminders', async (c) => {
-  // TODO: Implement create reminder
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Create reminder not yet implemented',
-    },
-  }, 501);
+  try {
+    const body = await c.req.json();
+    validateWithZod(CreateReminderSchema, body, 'Invalid reminder data');
+    
+    return c.json(notImplemented('Create reminder not yet implemented'), 501);
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      return c.json<ApiResponse>(e.toResponse(), 400);
+    }
+    throw e;
+  }
 });
 
 app.put('/v1/reminders/:id', async (c) => {
-  // TODO: Implement update reminder
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Update reminder not yet implemented',
-    },
-  }, 501);
+  try {
+    const body = await c.req.json();
+    validateWithZod(UpdateReminderSchema, body, 'Invalid reminder data');
+    
+    return c.json(notImplemented('Update reminder not yet implemented'), 501);
+  } catch (e) {
+    if (e instanceof ValidationError) {
+      return c.json<ApiResponse>(e.toResponse(), 400);
+    }
+    throw e;
+  }
 });
 
 app.delete('/v1/reminders/:id', async (c) => {
-  // TODO: Implement delete reminder
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Delete reminder not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('Delete reminder not yet implemented'), 501);
 });
 
 // ============================================================================
-// Image upload routes (R2) (placeholder - to be implemented)
+// Image Upload Routes (R2)
 // ============================================================================
 
 app.post('/v1/images/upload', async (c) => {
-  // TODO: Implement image upload to R2
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Image upload not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('Image upload not yet implemented'), 501);
 });
 
 app.get('/v1/images/:key', async (c) => {
-  // TODO: Implement image retrieval from R2
-  return c.json<ApiResponse>({
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message: 'Image retrieval not yet implemented',
-    },
-  }, 501);
+  return c.json(notImplemented('Image retrieval not yet implemented'), 501);
 });
 
 // ============================================================================
-// Error handling
+// Error Handling
 // ============================================================================
 
 app.notFound((c) => {
@@ -356,13 +325,29 @@ app.notFound((c) => {
     success: false,
     error: {
       code: 'NOT_FOUND',
-      message: 'Endpoint not found',
+      message: `Endpoint ${c.req.path} not found`,
     },
   }, 404);
 });
 
 app.onError((err, c) => {
   console.error('Server error:', err);
+  
+  // Handle known app errors
+  if (err instanceof AppError) {
+    return c.json<ApiResponse>(err.toResponse(), err.statusCode as any);
+  }
+  
+  // Handle D1 database errors
+  if (err && typeof err === 'object' && 'message' in err) {
+    const message = String(err.message);
+    if (message.includes('D1') || message.includes('database')) {
+      const dbError = handleD1Error(err);
+      return c.json<ApiResponse>(dbError.toResponse(), dbError.statusCode as any);
+    }
+  }
+  
+  // Generic internal error
   return c.json<ApiResponse>({
     success: false,
     error: {
@@ -372,5 +357,8 @@ app.onError((err, c) => {
   }, 500);
 });
 
-// Export for Cloudflare Workers
+// ============================================================================
+// Export
+// ============================================================================
+
 export default app;
