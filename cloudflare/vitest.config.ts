@@ -5,4 +5,7 @@ export default defineConfig({
     environment: 'node',
     globals: true,
   },
+  resolve: {
+    extensions: ['.ts', '.js'],
+  },
 });
