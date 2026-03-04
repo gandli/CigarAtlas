@@ -1,0 +1,33 @@
+{
+  "name": "cigaratlas-api",
+  "version": "1.0.0",
+  "description": "CigarAtlas API - Cloudflare Workers backend",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "deploy:prod": "wrangler deploy --config wrangler.production.toml",
+    "db:create": "wrangler d1 create cigaratlas-db",
+    "db:create:prod": "wrangler d1 create cigaratlas-db-prod",
+    "db:migrate": "wrangler d1 migrations apply cigaratlas-db",
+    "db:migrate:local": "wrangler d1 migrations apply cigaratlas-db --local",
+    "db:migrate:prod": "wrangler d1 migrations apply cigaratlas-db-prod --config wrangler.production.toml",
+    "db:query": "wrangler d1 execute cigaratlas-db --file",
+    "db:query:local": "wrangler d1 execute cigaratlas-db --local --file",
+    "tail": "wrangler tail",
+    "test": "vitest"
+  },
+  "keywords": ["cigaratlas", "cloudflare", "workers", "api"],
+  "author": "CigarAtlas Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250301.0",
+    "typescript": "^5.8.2",
+    "vitest": "^3.0.8",
+    "wrangler": "^4.0.0"
+  },
+  "dependencies": {
+    "hono": "^4.7.5",
+    "zod": "^3.24.2"
+  }
+}

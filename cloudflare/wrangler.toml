@@ -1,0 +1,20 @@
+#:schema node_modules/wrangler/config-schema.json
+name = "cigaratlas-api"
+main = "src/index.ts"
+compatibility_date = "2026-03-04"
+compatibility_flags = ["nodejs_compat"]
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "cigaratlas-db"
+database_id = ""  # Will be filled after creating the database
+
+# R2 Bucket binding for images
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "cigaratlas-images"
+
+# Environment variables (dev vars go in .dev.vars)
+[vars]
+ENVIRONMENT = "development"
