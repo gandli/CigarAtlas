@@ -1,0 +1,22 @@
+{
+  "name": "CigarAtlas",
+  "short_name": "CigarAtlas",
+  "description": "雪茄爱好者的社区平台 - 品鉴记录、社交圈子、本地聚会、雪茄柜管理",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafaf9",
+  "theme_color": "#b45309",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
