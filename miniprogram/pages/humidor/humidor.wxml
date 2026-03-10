@@ -1,0 +1,93 @@
+<!--pages/humidor/humidor.wxml-->
+<view class="page">
+  <!-- 未登录状态 -->
+  <view wx:if="{{!isLoggedIn}}" class="login-prompt">
+    <text class="login-icon">🗃️</text>
+    <text class="login-title">登录查看您的雪茄柜</text>
+    <text class="login-desc">管理您的雪茄收藏，记录购买和品鉴</text>
+    <button class="btn-primary" bindtap="handleLogin">微信登录</button>
+  </view>
+
+  <!-- 已登录状态 -->
+  <block wx:else>
+    <!-- 统计信息 -->
+    <view class="stats-section">
+      <view class="stats-card">
+        <view class="stat-item">
+          <text class="stat-value">{{stats.total}}</text>
+          <text class="stat-label">支雪茄</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-value">¥{{stats.totalValue}}</text>
+          <text class="stat-label">总价值</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-value">{{humidorItems.length}}</text>
+          <text class="stat-label">种类</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 工具栏 -->
+    <view class="toolbar">
+      <view class="search-bar">
+        <text class="search-icon">🔍</text>
+        <input class="search-input" placeholder="搜索雪茄..." placeholder-class="search-placeholder" />
+      </view>
+      <view class="view-toggle" bindtap="toggleView">
+        <text>{{activeView === 'list' ? '☰' : '▦'}}</text>
+      </view>
+    </view>
+
+    <!-- 列表视图 -->
+    <view wx:if="{{activeView === 'list'}}" class="humidor-list">
+      <view wx:for="{{humidorItems}}" wx:key="id" class="humidor-item" bindtap="navigateToDetail" data-id="{{item.id}}">
+        <image class="cigar-image" src="{{item.image || '/assets/images/cigar-placeholder.png'}}" mode="aspectFill"></image>
+        <view class="cigar-details">
+          <view class="cigar-header">
+            <text class="cigar-name">{{item.name}}</text>
+            <view class="cigar-rating">
+              <text class="rating-star">★</text>
+              <text class="rating-value">{{item.rating}}</text>
+            </view>
+          </view>
+          <text class="cigar-brand">{{item.brand}}</text>
+          <view class="cigar-meta">
+            <text class="quantity">数量: {{item.quantity}}支</text>
+            <text class="price">¥{{item.price}}/支</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 网格视图 -->
+    <view wx:else class="humidor-grid">
+      <view wx:for="{{humidorItems}}" wx:key="id" class="grid-item" bindtap="navigateToDetail" data-id="{{item.id}}">
+        <image class="grid-image" src="{{item.image || '/assets/images/cigar-placeholder.png'}}" mode="aspectFill"></image>
+        <view class="grid-info">
+          <text class="grid-name">{{item.name}}</text>
+          <text class="grid-quantity">{{item.quantity}}支</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 加载状态 -->
+    <view wx:if="{{loading}}" class="loading">
+      <text>加载中...</text>
+    </view>
+
+    <!-- 空状态 -->
+    <view wx:if="{{!loading && humidorItems.length === 0}}" class="empty-state">
+      <text class="empty-icon">🗃️</text>
+      <text class="empty-text">雪茄柜是空的</text>
+      <button class="btn-primary" bindtap="addCigar">添加雪茄</button>
+    </view>
+  </block>
+
+  <!-- 添加按钮 -->
+  <view wx:if="{{isLoggedIn}}" class="fab" bindtap="addCigar">
+    <text class="fab-icon">+</text>
+  </view>
+</view>

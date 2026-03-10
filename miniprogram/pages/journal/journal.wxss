@@ -1,0 +1,228 @@
+/* pages/journal/journal.wxss */
+
+.page {
+  min-height: 100vh;
+  background-color: var(--bg-primary);
+  padding-bottom: 120rpx;
+}
+
+/* Filter Bar */
+.filter-bar {
+  display: flex;
+  background-color: var(--bg-secondary);
+  padding: 16rpx 32rpx;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.filter-item {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  border-radius: 8rpx;
+  transition: all 0.3s;
+}
+
+.filter-item.active {
+  color: var(--primary-color);
+  background-color: rgba(201, 168, 108, 0.1);
+  font-weight: 600;
+}
+
+/* Journal List */
+.journal-list {
+  padding: 24rpx 32rpx;
+}
+
+.journal-card {
+  background-color: var(--bg-card);
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 24rpx;
+}
+
+/* Journal Header */
+.journal-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20rpx;
+}
+
+.author-avatar {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 50%;
+  margin-right: 16rpx;
+  background-color: #333;
+}
+
+.author-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.author-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.journal-date {
+  font-size: 24rpx;
+  color: var(--text-muted);
+}
+
+/* Cigar Info */
+.cigar-info {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  padding: 16rpx;
+  background-color: rgba(201, 168, 108, 0.1);
+  border-radius: 12rpx;
+  margin-bottom: 20rpx;
+}
+
+.cigar-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.cigar-brand {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.rating {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4rpx;
+}
+
+.rating-star {
+  color: var(--primary-color);
+  font-size: 28rpx;
+}
+
+.rating-value {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Journal Content */
+.journal-content {
+  margin-bottom: 16rpx;
+}
+
+.journal-title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 12rpx;
+}
+
+.journal-text {
+  display: block;
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* Tags */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+  margin-bottom: 16rpx;
+}
+
+.tag {
+  font-size: 24rpx;
+  color: var(--primary-color);
+  background-color: rgba(201, 168, 108, 0.1);
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+/* Journal Footer */
+.journal-footer {
+  display: flex;
+  gap: 32rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid var(--border-color);
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.stat-icon {
+  font-size: 28rpx;
+}
+
+.stat-value {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+/* FAB */
+.fab {
+  position: fixed;
+  right: 32rpx;
+  bottom: 200rpx;
+  width: 100rpx;
+  height: 100rpx;
+  background-color: var(--primary-color);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4rpx 16rpx rgba(201, 168, 108, 0.3);
+}
+
+.fab-icon {
+  font-size: 48rpx;
+  color: var(--bg-primary);
+  font-weight: 300;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 96rpx 32rpx;
+}
+
+.empty-icon {
+  font-size: 96rpx;
+  margin-bottom: 24rpx;
+}
+
+.empty-text {
+  font-size: 28rpx;
+  color: var(--text-muted);
+  margin-bottom: 32rpx;
+}
+
+/* Loading */
+.loading {
+  text-align: center;
+  padding: 48rpx;
+  color: var(--text-secondary);
+}

@@ -1,0 +1,62 @@
+<!--pages/social/social.wxml-->
+<view class="page">
+  <!-- 标签栏 -->
+  <view class="tab-bar">
+    <view class="tab-item {{activeTab === 'hot' ? 'active' : ''}}" bindtap="handleTabChange" data-tab="hot">
+      <text>热门</text>
+    </view>
+    <view class="tab-item {{activeTab === 'new' ? 'active' : ''}}" bindtap="handleTabChange" data-tab="new">
+      <text>最新</text>
+    </view>
+    <view class="tab-item {{activeTab === 'following' ? 'active' : ''}}" bindtap="handleTabChange" data-tab="following">
+      <text>关注</text>
+    </view>
+  </view>
+
+  <!-- 话题列表 -->
+  <view class="topic-list">
+    <view wx:for="{{topics}}" wx:key="id" class="topic-card" bindtap="navigateToTopic" data-id="{{item.id}}">
+      <view class="topic-header">
+        <image class="author-avatar" src="{{item.author.avatar || '/assets/images/avatar-placeholder.png'}}"></image>
+        <view class="author-info">
+          <text class="author-name">{{item.author.name}}</text>
+        </view>
+        <view wx:if="{{item.isHot}}" class="hot-badge">热门</view>
+      </view>
+
+      <view class="topic-content">
+        <text class="topic-title">{{item.title}}</text>
+        <text class="topic-text">{{item.content}}</text>
+      </view>
+
+      <view class="topic-footer">
+        <view class="stat-item">
+          <text class="stat-icon">💬</text>
+          <text class="stat-value">{{item.replies}}</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-icon">👁️</text>
+          <text class="stat-value">{{item.views}}</text>
+        </view>
+        <text class="last-reply">{{item.lastReply}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:if="{{!loading && topics.length === 0}}" class="empty-state">
+    <text class="empty-icon">💬</text>
+    <text class="empty-text">暂无话题</text>
+    <button class="btn-primary" bindtap="createTopic">发起话题</button>
+  </view>
+
+  <!-- 创建按钮 -->
+  <view class="fab" bindtap="createTopic">
+    <text class="fab-icon">+</text>
+  </view>
+</view>

@@ -1,0 +1,56 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/journal/journal",
+    "pages/social/social",
+    "pages/meetup/meetup",
+    "pages/humidor/humidor"
+  ],
+  "window": {
+    "backgroundTextStyle": "dark",
+    "navigationBarBackgroundColor": "#1a1a1a",
+    "navigationBarTitleText": "CigarAtlas",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0d0d0d"
+  },
+  "tabBar": {
+    "color": "#888888",
+    "selectedColor": "#c9a86c",
+    "backgroundColor": "#1a1a1a",
+    "borderStyle": "black",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页",
+        "iconPath": "assets/icons/home.png",
+        "selectedIconPath": "assets/icons/home-active.png"
+      },
+      {
+        "pagePath": "pages/journal/journal",
+        "text": "品鉴",
+        "iconPath": "assets/icons/journal.png",
+        "selectedIconPath": "assets/icons/journal-active.png"
+      },
+      {
+        "pagePath": "pages/social/social",
+        "text": "圈子",
+        "iconPath": "assets/icons/social.png",
+        "selectedIconPath": "assets/icons/social-active.png"
+      },
+      {
+        "pagePath": "pages/meetup/meetup",
+        "text": "聚会",
+        "iconPath": "assets/icons/meetup.png",
+        "selectedIconPath": "assets/icons/meetup-active.png"
+      },
+      {
+        "pagePath": "pages/humidor/humidor",
+        "text": "雪茄柜",
+        "iconPath": "assets/icons/humidor.png",
+        "selectedIconPath": "assets/icons/humidor-active.png"
+      }
+    ]
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

@@ -1,0 +1,66 @@
+<!--pages/meetup/meetup.wxml-->
+<view class="page">
+  <!-- 筛选栏 -->
+  <view class="filter-bar">
+    <view class="filter-item {{activeFilter === 'upcoming' ? 'active' : ''}}" bindtap="handleFilterChange" data-filter="upcoming">即将举行</view>
+    <view class="filter-item {{activeFilter === 'past' ? 'active' : ''}}" bindtap="handleFilterChange" data-filter="past">往期活动</view>
+    <view class="filter-item {{activeFilter === 'mine' ? 'active' : ''}}" bindtap="handleFilterChange" data-filter="mine">我参与的</view>
+  </view>
+
+  <!-- 活动列表 -->
+  <view class="meetup-list">
+    <view wx:for="{{meetups}}" wx:key="id" class="meetup-card" bindtap="navigateToDetail" data-id="{{item.id}}">
+      <!-- 日期标签 -->
+      <view class="date-badge">
+        <text class="date-day">{{item.date.split('-')[2]}}</text>
+        <text class="date-month">{{item.date.split('-')[1]}}月</text>
+      </view>
+
+      <!-- 活动信息 -->
+      <view class="meetup-info">
+        <view class="meetup-header">
+          <text class="meetup-title">{{item.title}}</text>
+          <view class="joined-badge" wx:if="{{item.isJoined}}">已报名</view>
+        </view>
+
+        <view class="meetup-meta">
+          <view class="meta-item">
+            <text class="meta-icon">🕐</text>
+            <text class="meta-text">{{item.time}}</text>
+          </view>
+          <view class="meta-item">
+            <text class="meta-icon">📍</text>
+            <text class="meta-text">{{item.location}}</text>
+          </view>
+        </view>
+
+        <view class="meetup-footer">
+          <view class="participants">
+            <text class="participants-count">{{item.participants}}/{{item.maxParticipants}}</text>
+            <text class="participants-label">人已报名</text>
+          </view>
+          <view class="price">
+            <text class="price-value">¥{{item.price}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:if="{{!loading && meetups.length === 0}}" class="empty-state">
+    <text class="empty-icon">📅</text>
+    <text class="empty-text">暂无活动</text>
+    <button class="btn-primary" bindtap="createMeetup">发起活动</button>
+  </view>
+
+  <!-- 创建按钮 -->
+  <view class="fab" bindtap="createMeetup">
+    <text class="fab-icon">+</text>
+  </view>
+</view>

@@ -1,0 +1,19 @@
+<!--components/cigar-card/cigar-card.wxml-->
+<view class="cigar-card" bindtap="onTap">
+  <image class="cigar-image" src="{{cigar.image || '/assets/images/cigar-placeholder.png'}}" mode="aspectFill"></image>
+  
+  <view class="cigar-info">
+    <text class="cigar-name">{{cigar.name}}</text>
+    <text class="cigar-brand">{{cigar.brand}}</text>
+    
+    <view class="cigar-meta">
+      <view class="rating">
+        <text class="star">★</text>
+        <text class="value">{{cigar.rating || 'N/A'}}</text>
+      </view>
+      <view wx:if="{{showActions}}" class="action" catchtap="onAddToHumidor">
+        <text class="action-icon">+ 收藏</text>
+      </view>
+    </view>
+  </view>
+</view>

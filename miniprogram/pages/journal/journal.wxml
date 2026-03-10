@@ -1,0 +1,73 @@
+<!--pages/journal/journal.wxml-->
+<view class="page">
+  <!-- 筛选栏 -->
+  <view class="filter-bar">
+    <view class="filter-item {{filterType === 'all' ? 'active' : ''}}" bindtap="handleFilterChange" data-type="all">全部</view>
+    <view class="filter-item {{filterType === 'mine' ? 'active' : ''}}" bindtap="handleFilterChange" data-type="mine">我的</view>
+    <view class="filter-item {{filterType === 'following' ? 'active' : ''}}" bindtap="handleFilterChange" data-type="following">关注</view>
+  </view>
+
+  <!-- 品鉴列表 -->
+  <view class="journal-list">
+    <view wx:for="{{journals}}" wx:key="id" class="journal-card" bindtap="navigateToDetail" data-id="{{item.id}}">
+      <!-- 作者信息 -->
+      <view class="journal-header">
+        <image class="author-avatar" src="{{item.author.avatar || '/assets/images/avatar-placeholder.png'}}"></image>
+        <view class="author-info">
+          <text class="author-name">{{item.author.name}}</text>
+          <text class="journal-date">{{item.createdAt}}</text>
+        </view>
+      </view>
+
+      <!-- 雪茄信息 -->
+      <view class="cigar-info">
+        <text class="cigar-name">{{item.cigar.name}}</text>
+        <text class="cigar-brand">{{item.cigar.brand}}</text>
+        <view class="rating">
+          <text class="rating-star">★</text>
+          <text class="rating-value">{{item.rating}}</text>
+        </view>
+      </view>
+
+      <!-- 品鉴内容 -->
+      <view class="journal-content">
+        <text class="journal-title">{{item.title}}</text>
+        <text class="journal-text">{{item.content}}</text>
+      </view>
+
+      <!-- 标签 -->
+      <view class="tags">
+        <text wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this" class="tag">#{{tag}}</text>
+      </view>
+
+      <!-- 互动栏 -->
+      <view class="journal-footer">
+        <view class="stat">
+          <text class="stat-icon">❤️</text>
+          <text class="stat-value">{{item.likes}}</text>
+        </view>
+        <view class="stat">
+          <text class="stat-icon">💬</text>
+          <text class="stat-value">{{item.comments}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 加载状态 -->
+  <view wx:if="{{loading}}" class="loading">
+    <text>加载中...</text>
+  </view>
+
+  <!-- 空状态 -->
+  <view wx:if="{{!loading && journals.length === 0}}" class="empty-state">
+    <text class="empty-icon">📝</text>
+    <text class="empty-text">暂无品鉴记录</text>
+    <button class="btn-primary" bindtap="createJournal">写一篇品鉴</button>
+  </view>
+
+  <!-- 创建按钮 -->
+  <view class="fab" bindtap="createJournal">
+    <text class="fab-icon">+</text>
+  </view>
+</view>
