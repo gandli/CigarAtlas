@@ -1,0 +1,36 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "CigarAtlas - 雪茄地图应用"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "CigarAtlas 主入口"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "CigarAtlas"
+    },
+    {
+      "name": "tab_home",
+      "value": "首页"
+    },
+    {
+      "name": "tab_journal",
+      "value": "品鉴"
+    },
+    {
+      "name": "tab_social",
+      "value": "圈子"
+    },
+    {
+      "name": "tab_meetup",
+      "value": "聚会"
+    },
+    {
+      "name": "tab_humidor",
+      "value": "雪茄柜"
+    }
+  ]
+}

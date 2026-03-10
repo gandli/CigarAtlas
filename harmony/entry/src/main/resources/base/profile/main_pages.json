@@ -1,0 +1,9 @@
+{
+  "src": [
+    "pages/IndexPage",
+    "pages/JournalPage",
+    "pages/SocialPage",
+    "pages/MeetupPage",
+    "pages/HumidorPage"
+  ]
+}
