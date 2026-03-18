@@ -16,30 +16,14 @@ import {
   handleD1Error,
   validateWithZod 
 } from './errors';
-import {
-  AppleSignInSchema,
-  CreateHumidorSchema,
-  UpdateHumidorSchema,
-  CreateCigarSchema,
-  UpdateCigarSchema,
-  CreateEnvironmentLogSchema,
-  CreateReminderSchema,
-  UpdateReminderSchema,
-} from './validation';
+
+// Import routes
+import authRoutes from './routes/auth';
+import userRoutes from './routes/users';
+import humidorsRoutes from './routes/humidors';
 
 // Create Hono app
 const app = new Hono<{ Bindings: Env }>();
-
-// Helper to return 501 Not Implemented responses
-function notImplemented(message: string): ApiResponse {
-  return {
-    success: false,
-    error: {
-      code: 'NOT_IMPLEMENTED',
-      message,
-    },
-  };
-}
 
 // ============================================================================
 // Global Middleware
@@ -75,16 +59,29 @@ app.get('/', (c) => {
     data: {
       name: 'CigarAtlas API',
       version: '1.0.0',
-      environment: c.env?.ENVIRONMENT || 'test',
+      environment: c.env?.ENVIRONMENT || 'development',
       timestamp: new Date().toISOString(),
     },
   });
 });
 
-app.get('/health', (c) => {
+app.get('/health', async (c) => {
+  // Check database connection
+  let dbStatus = 'unknown';
+  try {
+    await c.env.DB.prepare('SELECT 1').first();
+    dbStatus = 'connected';
+  } catch {
+    dbStatus = 'error';
+  }
+
   return c.json<ApiResponse>({
     success: true,
-    data: { status: 'healthy', timestamp: new Date().toISOString() },
+    data: {
+      status: 'healthy',
+      database: dbStatus,
+      timestamp: new Date().toISOString(),
+    },
   });
 });
 
@@ -100,238 +97,145 @@ app.get('/v1', (c) => {
         cigars: '/v1/cigars',
         logs: '/v1/logs',
         reminders: '/v1/reminders',
+        images: '/v1/images',
       },
+      documentation: 'https://github.com/cigaratlas/api-docs',
     },
   });
 });
 
 // ============================================================================
-// Auth Routes
+// API Routes
 // ============================================================================
 
-app.post('/v1/auth/apple', async (c) => {
-  try {
-    const body = await c.req.json();
-    validateWithZod(AppleSignInSchema, body, 'Invalid Apple Sign In data');
-    
-    // TODO: Implement actual Apple Sign In verification
-    return c.json(notImplemented('Apple Sign In not yet implemented'), 501);
-  } catch (e) {
-    if (e instanceof AppError) {
-      return c.json<ApiResponse>(e.toResponse(), e.statusCode as any);
-    }
-    throw e;
-  }
-});
+// Auth routes (public)
+app.route('/v1/auth', authRoutes);
 
-app.post('/v1/auth/refresh', async (c) => {
-  return c.json(notImplemented('Token refresh not yet implemented'), 501);
-});
+// User routes (authenticated)
+app.route('/v1/users', userRoutes);
 
-app.post('/v1/auth/logout', async (c) => {
-  return c.json<ApiResponse>({
-    success: true,
-    data: { message: 'Logged out successfully' },
-  });
-});
+// Humidor routes (authenticated)
+app.route('/v1/humidors', humidorsRoutes);
 
-// ============================================================================
-// User Routes
-// ============================================================================
+// Cigar routes
+const cigars = new Hono<{ Bindings: Env }>();
 
-app.get('/v1/users/me', async (c) => {
-  return c.json(notImplemented('Get user profile not yet implemented'), 501);
-});
+cigars.get('/humidors/:humidorId/cigars', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'List cigars not yet implemented' },
+}, 501));
 
-app.patch('/v1/users/me', async (c) => {
-  return c.json(notImplemented('Update user profile not yet implemented'), 501);
-});
+cigars.post('/humidors/:humidorId/cigars', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'Create cigar not yet implemented' },
+}, 501));
 
-// ============================================================================
-// Humidor Routes
-// ============================================================================
+cigars.get('/:id', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'Get cigar not yet implemented' },
+}, 501));
 
-app.get('/v1/humidors', async (c) => {
-  return c.json(notImplemented('List humidors not yet implemented'), 501);
-});
+cigars.put('/:id', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'Update cigar not yet implemented' },
+}, 501));
 
-app.post('/v1/humidors', async (c) => {
-  try {
-    const body = await c.req.json();
-    validateWithZod(CreateHumidorSchema, body, 'Invalid humidor data');
-    
-    // TODO: Implement with database insert
-    return c.json(notImplemented('Create humidor not yet implemented'), 501);
-  } catch (e) {
-    if (e instanceof ValidationError) {
-      return c.json<ApiResponse>(e.toResponse(), 400);
-    }
-    throw e;
-  }
-});
+cigars.delete('/:id', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'Delete cigar not yet implemented' },
+}, 501));
 
-app.get('/v1/humidors/:id', async (c) => {
-  // Route parameter captured but endpoint not implemented yet
-  return c.json(notImplemented('Get humidor not yet implemented'), 501);
-});
+app.route('/v1', cigars);
 
-app.put('/v1/humidors/:id', async (c) => {
-  // Route parameter captured but endpoint not implemented yet
-  try {
-    const body = await c.req.json();
-    validateWithZod(UpdateHumidorSchema, body, 'Invalid humidor data');
-    
-    return c.json(notImplemented('Update humidor not yet implemented'), 501);
-  } catch (e) {
-    if (e instanceof ValidationError) {
-      return c.json<ApiResponse>(e.toResponse(), 400);
-    }
-    throw e;
-  }
-});
+// Environment Log routes
+const logs = new Hono<{ Bindings: Env }>();
 
-app.delete('/v1/humidors/:id', async (c) => {
-  return c.json(notImplemented('Delete humidor not yet implemented'), 501);
-});
+logs.get('/humidors/:humidorId/logs', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'List environment logs not yet implemented' },
+}, 501));
 
-// ============================================================================
-// Cigar Routes
-// ============================================================================
+logs.post('/humidors/:humidorId/logs', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'Create environment log not yet implemented' },
+}, 501));
 
-app.get('/v1/humidors/:humidorId/cigars', async (c) => {
-  return c.json(notImplemented('List cigars not yet implemented'), 501);
-});
+logs.get('/humidors/:humidorId/logs/stats', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'Environment statistics not yet implemented' },
+}, 501));
 
-app.post('/v1/humidors/:humidorId/cigars', async (c) => {
-  try {
-    const body = await c.req.json();
-    validateWithZod(CreateCigarSchema, body, 'Invalid cigar data');
-    
-    return c.json(notImplemented('Create cigar not yet implemented'), 501);
-  } catch (e) {
-    if (e instanceof ValidationError) {
-      return c.json<ApiResponse>(e.toResponse(), 400);
-    }
-    throw e;
-  }
-});
+app.route('/v1', logs);
 
-app.get('/v1/cigars/:id', async (c) => {
-  return c.json(notImplemented('Get cigar not yet implemented'), 501);
-});
+// Reminder routes
+const reminders = new Hono<{ Bindings: Env }>();
 
-app.put('/v1/cigars/:id', async (c) => {
-  try {
-    const body = await c.req.json();
-    validateWithZod(UpdateCigarSchema, body, 'Invalid cigar data');
-    
-    return c.json(notImplemented('Update cigar not yet implemented'), 501);
-  } catch (e) {
-    if (e instanceof ValidationError) {
-      return c.json<ApiResponse>(e.toResponse(), 400);
-    }
-    throw e;
-  }
-});
+reminders.get('/humidors/:humidorId/reminders', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'List reminders not yet implemented' },
+}, 501));
 
-app.delete('/v1/cigars/:id', async (c) => {
-  return c.json(notImplemented('Delete cigar not yet implemented'), 501);
-});
+reminders.post('/humidors/:humidorId/reminders', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'Create reminder not yet implemented' },
+}, 501));
 
-// ============================================================================
-// Environment Log Routes
-// ============================================================================
+reminders.put('/reminders/:id', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'Update reminder not yet implemented' },
+}, 501));
 
-app.get('/v1/humidors/:humidorId/logs', async (c) => {
-  return c.json(notImplemented('List environment logs not yet implemented'), 501);
-});
+reminders.delete('/reminders/:id', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'Delete reminder not yet implemented' },
+}, 501));
 
-app.post('/v1/humidors/:humidorId/logs', async (c) => {
-  try {
-    const body = await c.req.json();
-    validateWithZod(CreateEnvironmentLogSchema, body, 'Invalid log data');
-    
-    return c.json(notImplemented('Create environment log not yet implemented'), 501);
-  } catch (e) {
-    if (e instanceof ValidationError) {
-      return c.json<ApiResponse>(e.toResponse(), 400);
-    }
-    throw e;
-  }
-});
+app.route('/v1', reminders);
 
-app.get('/v1/humidors/:humidorId/logs/stats', async (c) => {
-  return c.json(notImplemented('Environment statistics not yet implemented'), 501);
-});
+// Image routes
+const images = new Hono<{ Bindings: Env }>();
 
-// ============================================================================
-// Reminder Routes
-// ============================================================================
+images.post('/images/upload', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'Image upload not yet implemented' },
+}, 501));
 
-app.get('/v1/humidors/:humidorId/reminders', async (c) => {
-  return c.json(notImplemented('List reminders not yet implemented'), 501);
-});
+images.get('/images/:key', (c) => c.json<ApiResponse>({
+  success: false,
+  error: { code: 'NOT_IMPLEMENTED', message: 'Image retrieval not yet implemented' },
+}, 501));
 
-app.post('/v1/humidors/:humidorId/reminders', async (c) => {
-  try {
-    const body = await c.req.json();
-    validateWithZod(CreateReminderSchema, body, 'Invalid reminder data');
-    
-    return c.json(notImplemented('Create reminder not yet implemented'), 501);
-  } catch (e) {
-    if (e instanceof ValidationError) {
-      return c.json<ApiResponse>(e.toResponse(), 400);
-    }
-    throw e;
-  }
-});
-
-app.put('/v1/reminders/:id', async (c) => {
-  try {
-    const body = await c.req.json();
-    validateWithZod(UpdateReminderSchema, body, 'Invalid reminder data');
-    
-    return c.json(notImplemented('Update reminder not yet implemented'), 501);
-  } catch (e) {
-    if (e instanceof ValidationError) {
-      return c.json<ApiResponse>(e.toResponse(), 400);
-    }
-    throw e;
-  }
-});
-
-app.delete('/v1/reminders/:id', async (c) => {
-  return c.json(notImplemented('Delete reminder not yet implemented'), 501);
-});
-
-// ============================================================================
-// Image Upload Routes (R2)
-// ============================================================================
-
-app.post('/v1/images/upload', async (c) => {
-  return c.json(notImplemented('Image upload not yet implemented'), 501);
-});
-
-app.get('/v1/images/:key', async (c) => {
-  return c.json(notImplemented('Image retrieval not yet implemented'), 501);
-});
+app.route('/v1', images);
 
 // ============================================================================
 // Error Handling
 // ============================================================================
 
+/**
+ * 404 Not Found handler
+ */
 app.notFound((c) => {
   return c.json<ApiResponse>({
     success: false,
     error: {
       code: 'NOT_FOUND',
-      message: `Endpoint ${c.req.path} not found`,
+      message: `Endpoint not found: ${c.req.method} ${c.req.path}`,
     },
   }, 404);
 });
 
+/**
+ * Global error handler
+ */
 app.onError((err, c) => {
   console.error('Server error:', err);
+  
+  // Log request details for debugging
+  console.error({
+    method: c.req.method,
+    path: c.req.path,
+    headers: Object.fromEntries(c.req.raw.headers),
+  });
   
   // Handle known app errors
   if (err instanceof AppError) {
@@ -346,8 +250,7 @@ app.onError((err, c) => {
       return c.json<ApiResponse>(dbError.toResponse(), dbError.statusCode as any);
     }
   }
-  
-  // Generic internal error
+
   return c.json<ApiResponse>({
     success: false,
     error: {
