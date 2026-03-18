@@ -12,7 +12,7 @@ import {
   getEnvironmentTrends,
   getHourlyEnvironmentTrends,
   getEnvironmentAlerts,
-} from '../db';
+} from '../db/index';
 
 const stats = new Hono<{ Bindings: Env }>();
 

@@ -6,8 +6,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import app from '../src/index';
 import type { Env, ApiResponse, Humidor } from '../src/types';
-import { generateTokens } from '../src/utils/jwt';
-import { generateId, timestamp, createUser } from '../src/db';
+import { generateTokenPair as generateTokens } from '../src/utils/jwt';
+import { generateId, now as timestamp, createUser } from '../src/db/index';
 
 // ============================================================================
 // Test Environment Setup

@@ -9,6 +9,7 @@ compatibility_flags = ["nodejs_compat"]
 binding = "DB"
 database_name = "cigaratlas-db"
 database_id = ""  # Will be filled after creating the database
+migrations_dir = "d1/migrations"
 
 # R2 Bucket binding for images
 [[r2_buckets]]

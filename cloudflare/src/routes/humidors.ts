@@ -17,7 +17,7 @@ import {
   getDefaultHumidor,
   getHumidorSummary,
   getUserHumidorSummaries,
-} from '../db';
+} from '../db/index';
 
 const humidors = new Hono<{ Bindings: Env }>();
 
