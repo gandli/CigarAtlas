@@ -21,14 +21,14 @@
   "author": "CigarAtlas Team",
   "license": "MIT",
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250301.0",
-    "typescript": "^5.8.2",
-    "vitest": "^3.0.8",
-    "wrangler": "^4.0.0"
+    "@cloudflare/workers-types": "^4.20260317.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0",
+    "wrangler": "^4.75.0"
   },
   "dependencies": {
     "@tsndr/cloudflare-worker-jwt": "^3.2.1",
-    "hono": "^4.12.7",
-    "zod": "^3.24.2"
+    "hono": "^4.12.8",
+    "zod": "^3.25.76"
   }
 }
