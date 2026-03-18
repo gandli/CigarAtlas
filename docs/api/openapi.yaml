@@ -1,0 +1,630 @@
+openapi: 3.0.3
+info:
+  title: CigarAtlas API
+  description: |
+    API for CigarAtlas - a community app for cigar enthusiasts
+    
+    ## Features
+    - Humidor management (雪茄柜)
+    - Cigar inventory tracking
+    - Environment monitoring (temperature & humidity)
+    - Reminders and notifications
+    - Image upload (R2 storage)
+    
+    ## Authentication
+    All authenticated endpoints require a JWT token in the Authorization header:
+    ```
+    Authorization: Bearer <your-token>
+    ```
+    
+    ## Development Mode
+    In development environment, you can bypass authentication by setting:
+    ```
+    X-Dev-User-Id: <user-id>
+    ```
+  version: 1.0.0
+  contact:
+    name: CigarAtlas Team
+    url: https://github.com/gandli/CigarAtlas
+
+servers:
+  - url: http://localhost:8787
+    description: Development
+  - url: https://api.cigaratlas.com
+    description: Production
+
+tags:
+  - name: Health
+    description: Health check and API info
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Users
+    description: User profile management
+  - name: Humidors
+    description: Humidor (雪茄柜) CRUD operations
+  - name: Cigars
+    description: Cigar inventory management
+  - name: Environment Logs
+    description: Temperature and humidity monitoring
+  - name: Reminders
+    description: Reminder management
+  - name: Images
+    description: Image upload and retrieval
+
+paths:
+  /:
+    get:
+      tags:
+        - Health
+      summary: API Info
+      description: Get API name, version, and environment info
+      operationId: getApiInfo
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                data:
+                  name: CigarAtlas API
+                  version: 1.0.0
+                  environment: development
+                  timestamp: '2026-03-05T01:00:00.000Z'
+
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Health Check
+      description: Check API health status and database connectivity
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+              example:
+                success: true
+                data:
+                  status: healthy
+                  database: connected
+                  timestamp: '2026-03-05T01:00:00.000Z'
+
+  /v1:
+    get:
+      tags:
+        - Health
+      summary: API Version Info
+      description: Get available API endpoints
+      operationId: getApiVersion
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /v1/auth/apple:
+    post:
+      tags:
+        - Authentication
+      summary: Apple Sign In
+      description: Authenticate using Apple Sign In token
+      operationId: appleSignIn
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppleSignInRequest'
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Invalid credentials
+        '501':
+          description: Not yet implemented
+
+  /v1/auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh Token
+      description: Refresh access token using refresh token
+      operationId: refreshToken
+      responses:
+        '200':
+          description: Token refreshed
+        '401':
+          description: Invalid refresh token
+        '501':
+          description: Not yet implemented
+
+  /v1/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout
+      description: Invalidate tokens and logout
+      operationId: logout
+      responses:
+        '200':
+          description: Logged out successfully
+
+  /v1/users/me:
+    get:
+      tags:
+        - Users
+      summary: Get Current User
+      description: Get authenticated user's profile
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+        '501':
+          description: Not yet implemented
+
+    patch:
+      tags:
+        - Users
+      summary: Update User Profile
+      description: Update authenticated user's profile
+      operationId: updateUserProfile
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: Profile updated
+        '401':
+          description: Unauthorized
+        '501':
+          description: Not yet implemented
+
+  /v1/humidors:
+    get:
+      tags:
+        - Humidors
+      summary: List Humidors
+      description: Get all humidors for the current user
+      operationId: listHumidors
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of humidors
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Humidor'
+        '401':
+          description: Unauthorized
+
+    post:
+      tags:
+        - Humidors
+      summary: Create Humidor
+      description: Create a new humidor
+      operationId: createHumidor
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateHumidorRequest'
+      responses:
+        '201':
+          description: Humidor created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Humidor'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+
+  /v1/humidors/{id}:
+    get:
+      tags:
+        - Humidors
+      summary: Get Humidor
+      description: Get a specific humidor by ID
+      operationId: getHumidor
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Humidor details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Humidor'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (not owner)
+        '404':
+          description: Not found
+
+    put:
+      tags:
+        - Humidors
+      summary: Update Humidor
+      description: Fully update a humidor
+      operationId: updateHumidor
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateHumidorRequest'
+      responses:
+        '200':
+          description: Humidor updated
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+
+    patch:
+      tags:
+        - Humidors
+      summary: Partially Update Humidor
+      description: Partially update a humidor
+      operationId: patchHumidor
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateHumidorRequest'
+      responses:
+        '200':
+          description: Humidor updated
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+
+    delete:
+      tags:
+        - Humidors
+      summary: Delete Humidor
+      description: Delete a humidor (cascades to related data)
+      operationId: deleteHumidor
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Humidor deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Not found
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    ApiResponse:
+      type: object
+      required:
+        - success
+      properties:
+        success:
+          type: boolean
+        data:
+          type: object
+          nullable: true
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: object
+
+    User:
+      type: object
+      required:
+        - id
+        - apple_id
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+        apple_id:
+          type: string
+        nickname:
+          type: string
+          nullable: true
+        avatar_url:
+          type: string
+          nullable: true
+        timezone:
+          type: string
+          default: Asia/Shanghai
+        preferences:
+          type: string
+          nullable: true
+          description: JSON string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Humidor:
+      type: object
+      required:
+        - id
+        - user_id
+        - name
+        - type
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        type:
+          type: string
+          enum: [cabinet, cooler, desktop, travel]
+        description:
+          type: string
+          nullable: true
+          maxLength: 500
+        target_temperature_min:
+          type: number
+          format: float
+          default: 16.0
+          minimum: -10
+          maximum: 50
+        target_temperature_max:
+          type: number
+          format: float
+          default: 18.0
+          minimum: -10
+          maximum: 50
+        target_humidity_min:
+          type: number
+          format: float
+          default: 65.0
+          minimum: 0
+          maximum: 100
+        target_humidity_max:
+          type: number
+          format: float
+          default: 70.0
+          minimum: 0
+          maximum: 100
+        image_url:
+          type: string
+          nullable: true
+          format: uri
+        capacity:
+          type: integer
+          nullable: true
+          minimum: 0
+        is_default:
+          type: integer
+          enum: [0, 1]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateHumidorRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        type:
+          type: string
+          enum: [cabinet, cooler, desktop, travel]
+        description:
+          type: string
+          maxLength: 500
+        target_temperature_min:
+          type: number
+          minimum: -10
+          maximum: 50
+        target_temperature_max:
+          type: number
+          minimum: -10
+          maximum: 50
+        target_humidity_min:
+          type: number
+          minimum: 0
+          maximum: 100
+        target_humidity_max:
+          type: number
+          minimum: 0
+          maximum: 100
+        capacity:
+          type: integer
+          minimum: 0
+
+    UpdateHumidorRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        type:
+          type: string
+          enum: [cabinet, cooler, desktop, travel]
+        description:
+          type: string
+          maxLength: 500
+        target_temperature_min:
+          type: number
+          minimum: -10
+          maximum: 50
+        target_temperature_max:
+          type: number
+          minimum: -10
+          maximum: 50
+        target_humidity_min:
+          type: number
+          minimum: 0
+          maximum: 100
+        target_humidity_max:
+          type: number
+          minimum: 0
+          maximum: 100
+        image_url:
+          type: string
+          format: uri
+        capacity:
+          type: integer
+          minimum: 0
+        is_default:
+          type: boolean
+
+    AppleSignInRequest:
+      type: object
+      required:
+        - identityToken
+        - authorizationCode
+      properties:
+        identityToken:
+          type: string
+        authorizationCode:
+          type: string
+        fullName:
+          type: object
+          properties:
+            givenName:
+              type: string
+            familyName:
+              type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        user:
+          $ref: '#/components/schemas/User'
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        nickname:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+        timezone:
+          type: string
+        preferences:
+          type: string

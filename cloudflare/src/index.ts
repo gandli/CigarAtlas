@@ -21,9 +21,14 @@ import {
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
 import humidorsRoutes from './routes/humidors';
+import statsRoutes from './routes/stats';
 
-// Create Hono app
-const app = new Hono<{ Bindings: Env }>();
+// Create Hono app with custom context
+type Variables = {
+  userId: string;
+};
+
+const app = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 // ============================================================================
 // Global Middleware
@@ -53,6 +58,10 @@ app.use('*', cors({
 // Health Check Endpoints
 // ============================================================================
 
+/**
+ * GET /
+ * API info and health check
+ */
 app.get('/', (c) => {
   return c.json<ApiResponse>({
     success: true,
@@ -65,6 +74,10 @@ app.get('/', (c) => {
   });
 });
 
+/**
+ * GET /health
+ * Health check endpoint with database connectivity check
+ */
 app.get('/health', async (c) => {
   // Check database connection
   let dbStatus = 'unknown';
@@ -85,6 +98,10 @@ app.get('/health', async (c) => {
   });
 });
 
+/**
+ * GET /v1
+ * API version info
+ */
 app.get('/v1', (c) => {
   return c.json<ApiResponse>({
     success: true,
@@ -94,12 +111,13 @@ app.get('/v1', (c) => {
         auth: '/v1/auth',
         users: '/v1/users',
         humidors: '/v1/humidors',
+        stats: '/v1/humidors/:id/stats',
         cigars: '/v1/cigars',
         logs: '/v1/logs',
         reminders: '/v1/reminders',
         images: '/v1/images',
       },
-      documentation: 'https://github.com/cigaratlas/api-docs',
+      documentation: 'https://github.com/gandli/CigarAtlas',
     },
   });
 });
@@ -117,8 +135,19 @@ app.route('/v1/users', userRoutes);
 // Humidor routes (authenticated)
 app.route('/v1/humidors', humidorsRoutes);
 
+// Statistics routes (authenticated)
+app.route('/v1/humidors', statsRoutes);
+
+// ============================================================================
+// Placeholder Routes (To Be Implemented)
+// ============================================================================
+
 // Cigar routes
 const cigars = new Hono<{ Bindings: Env }>();
+cigars.use('/*', (c, next) => {
+  // TODO: Add auth middleware
+  return next();
+});
 
 cigars.get('/humidors/:humidorId/cigars', (c) => c.json<ApiResponse>({
   success: false,
@@ -260,8 +289,5 @@ app.onError((err, c) => {
   }, 500);
 });
 
-// ============================================================================
-// Export
-// ============================================================================
-
+// Export for Cloudflare Workers
 export default app;

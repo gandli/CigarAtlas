@@ -290,3 +290,19 @@ export interface HumidorSummary extends Humidor {
   latest_humidity: number | null;
   latest_log_at: string | null;
 }
+
+export interface EnvironmentTrend {
+  humidor_id: string;
+  period: string;
+  avg_temperature: number;
+  avg_humidity: number;
+  readings_count: number;
+}
+
+export interface EnvironmentAlert {
+  humidor_id: string;
+  alert_type: 'temperature_high' | 'temperature_low' | 'humidity_high' | 'humidity_low';
+  value: number;
+  threshold: number;
+  logged_at: string;
+}

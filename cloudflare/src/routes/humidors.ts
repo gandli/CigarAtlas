@@ -1,10 +1,10 @@
 /**
  * Humidor Routes
- * Handles humidor (雪茄柜) CRUD operations
+ * Handles humidor (雪茄柜) CRUD operations and statistics
  */
 
 import { Hono } from 'hono';
-import type { Env, ApiResponse, Humidor } from '../types';
+import type { Env, ApiResponse, Humidor, HumidorSummary } from '../types';
 import { validate, createHumidorSchema, updateHumidorSchema, validationErrorResponse } from '../utils/validation';
 import { authMiddleware, requireUser } from '../middleware/auth';
 import {
@@ -14,6 +14,9 @@ import {
   updateHumidor,
   deleteHumidor,
   generateId,
+  getDefaultHumidor,
+  getHumidorSummary,
+  getUserHumidorSummaries,
 } from '../db';
 
 const humidors = new Hono<{ Bindings: Env }>();
@@ -23,15 +26,16 @@ humidors.use('/*', authMiddleware);
 
 /**
  * GET /v1/humidors
- * List all humidors for the current user
+ * List all humidors for the current user with summaries
  */
 humidors.get('/', async (c) => {
   try {
     const user = await requireUser(c);
     
-    const humidors = await getHumidorsByUserId(c.env.DB, user.id);
+    // Use optimized batch query for summaries
+    const humidors = await getUserHumidorSummaries(c.env.DB, user.id);
 
-    return c.json<ApiResponse<Humidor[]>>({
+    return c.json<ApiResponse<HumidorSummary[]>>({
       success: true,
       data: humidors,
     });
@@ -53,6 +57,32 @@ humidors.get('/', async (c) => {
       error: {
         code: 'INTERNAL_ERROR',
         message: 'Failed to retrieve humidors',
+      },
+    }, 500);
+  }
+});
+
+/**
+ * GET /v1/humidors/summary
+ * Get summaries for all user's humidors (lightweight version)
+ */
+humidors.get('/summary', async (c) => {
+  try {
+    const user = await requireUser(c);
+    
+    const summaries = await getUserHumidorSummaries(c.env.DB, user.id);
+
+    return c.json<ApiResponse<HumidorSummary[]>>({
+      success: true,
+      data: summaries,
+    });
+  } catch (error) {
+    console.error('Get humidor summaries error:', error);
+    return c.json<ApiResponse>({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to retrieve humidor summaries',
       },
     }, 500);
   }
@@ -107,6 +137,54 @@ humidors.get('/:id', async (c) => {
 });
 
 /**
+ * GET /v1/humidors/:id/summary
+ * Get detailed summary for a specific humidor
+ */
+humidors.get('/:id/summary', async (c) => {
+  try {
+    const user = await requireUser(c);
+    const humidorId = c.req.param('id');
+
+    const summary = await getHumidorSummary(c.env.DB, humidorId);
+
+    if (!summary) {
+      return c.json<ApiResponse>({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Humidor not found',
+        },
+      }, 404);
+    }
+
+    // Check ownership
+    if (summary.user_id !== user.id) {
+      return c.json<ApiResponse>({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You do not have access to this humidor',
+        },
+      }, 403);
+    }
+
+    return c.json<ApiResponse<HumidorSummary>>({
+      success: true,
+      data: summary,
+    });
+  } catch (error) {
+    console.error('Get humidor summary error:', error);
+    return c.json<ApiResponse>({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to retrieve humidor summary',
+      },
+    }, 500);
+  }
+});
+
+/**
  * POST /v1/humidors
  * Create a new humidor
  */
@@ -135,12 +213,17 @@ humidors.post('/', async (c) => {
   try {
     const user = await requireUser(c);
 
-    // Check if this is set as default - if so, unset other defaults
-    let isDefault = data.type === 'cabinet' ? 1 : 0;
-    if (data.type !== undefined) {
-      // If creating first humidor, make it default
-      const existingHumidors = await getHumidorsByUserId(c.env.DB, user.id);
-      if (existingHumidors.length === 0) {
+    // Check if this should be the default humidor
+    let isDefault = 0;
+    const existingHumidors = await getHumidorsByUserId(c.env.DB, user.id);
+    
+    if (existingHumidors.length === 0) {
+      // First humidor is always default
+      isDefault = 1;
+    } else if (data.type === 'cabinet') {
+      // Cabinet type is preferred as default
+      const hasDefault = existingHumidors.some(h => h.is_default === 1);
+      if (!hasDefault) {
         isDefault = 1;
       }
     }
@@ -230,7 +313,6 @@ humidors.put('/:id', async (c) => {
 
     // Handle is_default logic - if setting this as default, unset others
     if (data.is_default === true) {
-      // Unset all other humidors for this user
       const allHumidors = await getHumidorsByUserId(c.env.DB, user.id);
       for (const h of allHumidors) {
         if (h.id !== humidorId && h.is_default === 1) {
